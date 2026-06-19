@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1781861606,
+        "titolo": "Reser password metodo",
+        "parole_chiave": [
+            "password",
+            "reset",
+            "problemi di accesso"
+        ],
+        "descrizione": "Problemi di accesso ",
+        "soluzioni": [
+            "Aprite il link https://myprofile.teamsystem.com/Account/ForgotPassword",
+            "Inserire la mail lato Negozio e codice sicurezza ricevuto",
+            "Inserite nuova password lato Negozio"
+        ]
+    }
+]

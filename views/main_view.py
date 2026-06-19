@@ -15,9 +15,7 @@ class MainView(ctk.CTk):
         percorso_logo = os.path.join(cartella_progetto, "data", "app.png")
 
         # Applica il logo alla barra del titolo
-        # Applica il logo alla barra del titolo
         try:
-            # Usiamo PhotoImage classico di tkinter
             from tkinter import PhotoImage
             
             # Salviamo l'immagine come variabile di istanza (self.) così Python non la cancella dalla memoria!
@@ -28,7 +26,6 @@ class MainView(ctk.CTk):
         except Exception as e:
             print(f"Impossibile caricare il logo della barra del titolo: {e}")
 
-        # --- SISTEMATA INDENTAZIONE QUI ---
         # Layout: 2 colonne (Menu laterale e Area Contenuto)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -44,7 +41,6 @@ class MainView(ctk.CTk):
             pil_img = Image.open(percorso_logo)
             
             # Definiamo la dimensione del logo nella sidebar (es. 120 pixel di larghezza per 120 di altezza)
-            # Puoi cambiare questi numeri per rimpicciolire o ingrandire il logo
             logo_sidebar = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(120, 120))
             
             # Creiamo la Label inserendo l'immagine ed eliminando il testo (text="")
@@ -68,14 +64,21 @@ class MainView(ctk.CTk):
         self.btn_app = ctk.CTkButton(self.sidebar_globale, text="💻 Problemi App GDV BI", anchor="w")
         self.btn_app.pack(fill="x", padx=15, pady=5)
 
+         # AGGIUNTO: Bottone per accedere alla sezione MT
+        self.btn_mt = ctk.CTkButton(self.sidebar_globale, text="💰 Anomalie App METODO", anchor="w")
+        self.btn_mt.pack(fill="x", padx=15, pady=5)
+
         self.btn_negozi = ctk.CTkButton(self.sidebar_globale, text="🏬 Anagrafica Negozi", anchor="w")
         self.btn_negozi.pack(fill="x", padx=15, pady=5)
+
+       
 
         # 2. Contenitore dove inseriremo i moduli alternabili
         self.container_area = ctk.CTkFrame(self, fg_color="transparent")
         self.container_area.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
         self.container_area.grid_columnconfigure(0, weight=1)
         self.container_area.grid_rowconfigure(0, weight=1)
+
 
     def mostra_sezione(self, frame_sezione):
         """Nasconde gli altri frame e porta in primo piano quello selezionato."""
