@@ -61,6 +61,9 @@ class MainView(ctk.CTk):
         self.btn_zebra = ctk.CTkButton(self.sidebar_globale, text="🖨️ Assistente Zebra", anchor="w")
         self.btn_zebra.pack(fill="x", padx=15, pady=5)
 
+        self.btn_brother = ctk.CTkButton(self.sidebar_globale, text="🖨️ Assistente Brother", anchor="w")
+        self.btn_brother.pack(fill="x", padx=15, pady=5)
+
         self.btn_app = ctk.CTkButton(self.sidebar_globale, text="💻 Problemi App GDV BI", anchor="w")
         self.btn_app.pack(fill="x", padx=15, pady=5)
 

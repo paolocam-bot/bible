@@ -266,19 +266,5 @@
             "Se ancora non viene risolto staccare il cavo usb e ricollegarlo, se windows vede un altra stampante ed è funzionante rimuovere la vecchia e ripristinare la nuova.",
             "A mali estremi Reinstallare i driver meglio ancora con la app Controllo Stamapante."
         ]
-    },
-    {
-        "id": 1781854498,
-        "titolo": "Metodo non riconosce le stampanti in automatico",
-        "parole_chiave": [
-            "metodo",
-            "non riconosce la stampante"
-        ],
-        "descrizione": "Metodo quando stampa non siconosce la stampante Zebra in automatico",
-        "soluzioni": [
-            "Controllare se le stampanti hanno i seguenti nomi, ZEBRA GARANZIE",
-            "Controllare se le stampanti hanno i settagi coretti",
-            "Eseguire una prova di stampa dda Metodo"
-        ]
     }
 ]

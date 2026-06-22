@@ -7,6 +7,9 @@ from views.app_view import AppView
 from controllers.manuale_controller import ManualeController
 from controllers.negozio_controller import NegozioController
 from controllers.app_controller import AppController 
+from models.brother_model import BrotherModel
+from views.brother_view import BrotherView
+from controllers.brother_controller import BrotherController
 
 # Import dei moduli MT (Verifica che i file si chiamino esattamente così)
 from models.mt_model import MTModel
@@ -21,6 +24,10 @@ class MainController:
         self.model_zebra = ManualeModel()
         self.view_zebra = ManualeView(self.view.container_area)
         self.ctrl_zebra = ManualeController(self.model_zebra, self.view_zebra)
+
+        self.model_brother = BrotherModel()
+        self.view_brother = BrotherView(self.view.container_area)
+        self.ctrl_brother = BrotherController(self.model_brother, self.view_brother)
 
         # 2. Inizializza Modulo Problemi App
         self.model_app = AppModel()
@@ -39,6 +46,7 @@ class MainController:
 
         # 5. Collega i bottoni del menu alle rispettive funzioni di scambio
         self.view.btn_zebra.configure(command=lambda: self.view.mostra_sezione(self.view_zebra))
+        self.view.btn_brother.configure(command=lambda: self.view.mostra_sezione(self.view_brother))
         self.view.btn_app.configure(command=lambda: self.view.mostra_sezione(self.view_app)) 
         self.view.btn_negozi.configure(command=lambda: self.view.mostra_sezione(self.view_negozi))
         

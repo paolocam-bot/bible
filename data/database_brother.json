@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1781863313,
+        "titolo": "Brother offline",
+        "parole_chiave": [
+            "non stampa",
+            "stampante offline"
+        ],
+        "descrizione": "la stampante brother non riesce ad effetuare le spampe",
+        "soluzioni": [
+            "Controllare se la stamapante è conessa a internet tramite l' IP (si trova in gestioni stampanti)",
+            "Spegnere e riaccedere la stampante e vedere se si ricollega.",
+            "Se ancora non si collega aprire Brother Utility e verificare le impostazioni stampa."
+        ]
+    }
+]
