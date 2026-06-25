@@ -12,5 +12,19 @@
             "Spegnere e riaccedere la stampante e vedere se si ricollega.",
             "Se ancora non si collega aprire Brother Utility e verificare le impostazioni stampa."
         ]
+    },
+    {
+        "id": 1782286598,
+        "titolo": "Installazione Brother",
+        "parole_chiave": [
+            "nuova installazione"
+        ],
+        "descrizione": "neccesita di un installazione pulita e nuova della stampante brother ",
+        "soluzioni": [
+            "andare su internet dal PC del negozio e cercare i driver relativi al modello BROTHER",
+            "scaricare i driver easy o completi e installarli",
+            "configurare la stampante andando sull ip e cambiare pa password da vecchia a nuova =(vecchia!)",
+            "sistemare impostazioni fax e effetuare la prova di stampa"
+        ]
     }
 ]
