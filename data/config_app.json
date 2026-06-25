@@ -1,0 +1,32 @@
+[
+    {
+        "id": "zebra",
+        "testo": "🖨️ Assistente Zebra",
+        "db": "database_manuale.json",
+        "tipo": "manuale"
+    },
+    {
+        "id": "brother",
+        "testo": "🖨️ Assistente Brother",
+        "db": "database_brother.json",
+        "tipo": "manuale"
+    },
+    {
+        "id": "app",
+        "testo": "💻 Problemi App GDV BI",
+        "db": "problemi_app.json",
+        "tipo": "manuale"
+    },
+    {
+        "id": "mt",
+        "testo": "💰 Anomalie App METODO",
+        "db": "database_mt.json",
+        "tipo": "manuale"
+    },
+    {
+        "id": "negozi",
+        "testo": "🏬 Anagrafica Negozi",
+        "db": "database_negozi.json",
+        "tipo": "negozio"
+    }
+]

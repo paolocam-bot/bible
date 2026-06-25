@@ -11,7 +11,9 @@
         "descrizione": "L'applicazione non riesce a caricare i file e spunta errore_loading_data.",
         "soluzioni": [
             "Effetua il log out e chiudi l applicazione GDV BI",
-            "Riapri l App ed effetua il log in"
+            "Riapri l App ed effetua il log in",
+            "Username = acronimo negozio(VIM)",
+            "PW = VIMODRONE"
         ]
     },
     {
