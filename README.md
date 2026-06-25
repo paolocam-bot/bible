@@ -1,0 +1,1 @@
+python -m nuitka --standalone --plugin-enable=tk-inter --include-data-dir=data=data main.py

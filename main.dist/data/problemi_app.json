@@ -1,0 +1,51 @@
+[
+    {
+        "id": 1,
+        "titolo": "Errore Loading dati",
+        "parole_chiave": [
+            "database",
+            "connessione",
+            "errore",
+            "caricamento dati"
+        ],
+        "descrizione": "L'applicazione non riesce a caricare i file e spunta errore_loading_data.",
+        "soluzioni": [
+            "Effetua il log out e chiudi l applicazione GDV BI",
+            "Riapri l App ed effetua il log in",
+            "Username = acronimo negozio(VIM)",
+            "PW = VIMODRONE"
+        ]
+    },
+    {
+        "id": 2,
+        "titolo": "L'applicazione richiede una conferma di accesso",
+        "parole_chiave": [
+            "non accede",
+            "bloccato",
+            "conferma accesso",
+            "nonfunziona"
+        ],
+        "descrizione": "L'applicazione non riesce a entre pur avendo fatto il login",
+        "soluzioni": [
+            "Andare da parte dell operatore su https://test.gioiellidivalenza.com/admin/devices e cliccare sull ingranaggio in altro a DX",
+            "Verificare che il nome in attesa di autentiucazione sia lo stesso del dispositivo che sta tentando di accedere all applicazione",
+            "Confermare l autenticazione del dispositivo cliccando su 'Conferma e cambiare il nome del dispositivo",
+            "Riaprire l app lato Negozio"
+        ]
+    },
+    {
+        "id": 3,
+        "titolo": "L'applicazione risulta offline",
+        "parole_chiave": [
+            "non accede",
+            "bloccato",
+            "offline"
+        ],
+        "descrizione": "L'applicazione non riesce a entre e restituisce offline",
+        "soluzioni": [
+            "Chiudere l applicazione effetuare effetuare il logoute se neccesario",
+            "Staccare e attacre il WI-FI dal tablet",
+            "Riaprile la applicazione lato Negozio."
+        ]
+    }
+]
