@@ -15,43 +15,48 @@ class TaskView(ctk.CTkFrame):
         self.form_frame = ctk.CTkFrame(self)
         self.form_frame.pack(fill="x", padx=10, pady=5)
 
-        # Riga 1: Data, Negozio (Anagrafica), Operatore e Stato
+        # Configurazione colonne griglia del Form
+        self.form_frame.grid_columnconfigure(1, weight=1)
+        self.form_frame.grid_columnconfigure(3, weight=1)
+        self.form_frame.grid_columnconfigure(5, weight=1)
+        self.form_frame.grid_columnconfigure(7, weight=1)
+
+        # Riga 0: Data, Negozio, Operatore e Stato
         lbl_data = ctk.CTkLabel(self.form_frame, text="Data:")
         lbl_data.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.entry_data = ctk.CTkEntry(self.form_frame, width=110)
         self.entry_data.insert(0, datetime.now().strftime("%d/%m/%Y"))
-        self.entry_data.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+        self.entry_data.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         lbl_negozio = ctk.CTkLabel(self.form_frame, text="Negozio:")
         lbl_negozio.grid(row=0, column=2, padx=5, pady=5, sticky="w")
-        # Menu a tendina per i negozi (Verrà popolato dinamicamente dal controller)
         self.combo_negozio = ctk.CTkComboBox(self.form_frame, values=["Nessun Negozio"], width=180)
-        self.combo_negozio.grid(row=0, column=3, padx=5, pady=5, sticky="w")
+        self.combo_negozio.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
 
         lbl_op = ctk.CTkLabel(self.form_frame, text="Operatore:")
         lbl_op.grid(row=0, column=4, padx=5, pady=5, sticky="w")
         self.entry_operatore = ctk.CTkEntry(self.form_frame, width=130, placeholder_text="Nome tecnico")
-        self.entry_operatore.grid(row=0, column=5, padx=5, pady=5, sticky="w")
+        self.entry_operatore.grid(row=0, column=5, padx=5, pady=5, sticky="ew")
 
         lbl_stato = ctk.CTkLabel(self.form_frame, text="Stato:")
         lbl_stato.grid(row=0, column=6, padx=5, pady=5, sticky="w")
         self.combo_stato = ctk.CTkComboBox(self.form_frame, values=["Risolto", "Da finire / Incompleto", "In attesa feedback"], width=160)
-        self.combo_stato.grid(row=0, column=7, padx=5, pady=5, sticky="w")
+        self.combo_stato.grid(row=0, column=7, padx=5, pady=5, sticky="ew")
 
-        # Riga 2: Note
+        # Riga 1 & 2: Campo Note ampio (Cambiamo in CTkTextbox per avere più righe)
         lbl_note = ctk.CTkLabel(self.form_frame, text="Note / Dettagli:")
-        lbl_note.grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.entry_note = ctk.CTkEntry(self.form_frame, placeholder_text="Descrivi cosa è stato fatto...")
-        self.entry_note.grid(row=1, column=1, columnspan=5, padx=5, pady=5, sticky="ew")
+        lbl_note.grid(row=1, column=0, padx=5, pady=(5, 0), sticky="nw")
         
-        self.form_frame.grid_columnconfigure(5, weight=1)
+        # CTkTextbox gestisce nativamente il testo esteso su più righe
+        self.entry_note = ctk.CTkTextbox(self.form_frame, height=65, activate_scrollbars=True)
+        self.entry_note.grid(row=1, column=1, columnspan=7, padx=5, pady=5, sticky="ew")
 
-        # Contenitore per i bottoni di azione sulla destra
+        # Riga 3: Contenitore Pulsanti di Azione (Allineati a destra in basso)
         self.azioni_btn_frame = ctk.CTkFrame(self.form_frame, fg_color="transparent")
-        self.azioni_btn_frame.grid(row=1, column=6, columnspan=2, padx=5, pady=5, sticky="e")
+        self.azioni_btn_frame.grid(row=2, column=1, columnspan=7, padx=5, pady=(0, 5), sticky="e")
 
         self.btn_annulla = ctk.CTkButton(self.azioni_btn_frame, text="Annulla", fg_color="#7f8c8d", hover_color="#95a5a6", width=70, command=self._pulisci_form)
-        self.btn_azione = ctk.CTkButton(self.azioni_btn_frame, text="Inserisci Task", fg_color="#2980b9", hover_color="#3498db", width=100, command=self._on_azione_click)
+        self.btn_azione = ctk.CTkButton(self.azioni_btn_frame, text="Inserisci Task", fg_color="#2980b9", hover_color="#3498db", width=110, command=self._on_azione_click)
         self.btn_azione.pack(side="right", padx=2)
 
         # --- BARRA DI RICERCA TASK ---
@@ -63,7 +68,6 @@ class TaskView(ctk.CTkFrame):
         
         self.entry_ricerca = ctk.CTkEntry(self.search_frame, placeholder_text="Digita una data (gg/mm/aaaa) o il nome di un negozio per filtrare...", width=400)
         self.entry_ricerca.pack(side="left", fill="x", expand=True)
-        # Lega la digitazione della tastiera al filtro in tempo reale
         self.entry_ricerca.bind("<KeyRelease>", lambda event: self.aggiorna_tabella())
 
         # --- TABELLA VISUALIZZAZIONE ---
@@ -81,7 +85,6 @@ class TaskView(ctk.CTkFrame):
 
     def imposta_controller(self, controller):
         self.controller = controller
-        # Popola inizialmente la lista negozi prendendoli dall'anagrafica reale
         self.aggiorna_opzioni_negozi()
         self.aggiorna_tabella()
 
@@ -90,7 +93,8 @@ class TaskView(ctk.CTkFrame):
         negozio = self.combo_negozio.get()
         op = self.entry_operatore.get().strip()
         stato = self.combo_stato.get()
-        note = self.entry_note.get().strip()
+        # Per la Textbox serve estrarre il testo partendo da riga 1, carattere 0 fino alla fine
+        note = self.entry_note.get("1.0", "end").strip()
 
         if not (data and op and note):
             return
@@ -114,15 +118,17 @@ class TaskView(ctk.CTkFrame):
         self.entry_operatore.delete(0, "end")
         self.entry_operatore.insert(0, task["operatore"])
         self.combo_stato.set(task["stato"])
-        self.entry_note.delete(0, "end")
-        self.entry_note.insert(0, task["note"])
+        
+        # Pulizia e inserimento corretti per la Textbox
+        self.entry_note.delete("1.0", "end")
+        self.entry_note.insert("1.0", task["note"])
 
         self.btn_azione.configure(text="Salva Modifica", fg_color="#d35400", hover_color="#e67e22")
         self.btn_annulla.pack(side="left", padx=2)
 
     def _pulisci_form(self):
         self.task_in_modifica_id = None
-        self.entry_note.delete(0, "end")
+        self.entry_note.delete("1.0", "end")
         self.entry_operatore.delete(0, "end")
         self.entry_data.delete(0, "end")
         self.entry_data.insert(0, datetime.now().strftime("%d/%m/%Y"))
@@ -148,35 +154,45 @@ class TaskView(ctk.CTkFrame):
             negozio_task = task.get("negozio", "").lower()
             data_task = task.get("data", "").lower()
             
-            # Filtra in base al testo inserito nella barra di ricerca
             if testo_ricerca and (testo_ricerca not in negozio_task and testo_ricerca not in data_task):
                 continue
 
             bg_riga = "#2c3e50" if i % 2 == 0 else "transparent"
-            riga = ctk.CTkFrame(self.scroll_table, fg_color=bg_riga, height=35)
-            riga.pack(fill="x", pady=1)
-            riga.pack_propagate(False)
+            
+            # Usiamo un layout a griglia (grid) sulla riga invece del pack, così i pulsanti rimangono ancorati a destra
+            riga = ctk.CTkFrame(self.scroll_table, fg_color=bg_riga, height=40)
+            riga.pack(fill="x", pady=2, padx=5)
+            riga.grid_columnconfigure(4, weight=1) # La colonna delle note si espande, le altre sono fisse
 
             colore_stato = "#2ecc71" if task["stato"] == "Risolto" else ("#e67e22" if "Da finire" in task["stato"] else "#f1c40f")
 
-            ctk.CTkLabel(riga, text=task["data"], width=90, anchor="w").pack(side="left", padx=10)
-            ctk.CTkLabel(riga, text=task.get("negozio", "N/D"), width=150, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left", padx=10)
-            ctk.CTkLabel(riga, text=task["operatore"], width=110, anchor="w").pack(side="left", padx=10)
-            ctk.CTkLabel(riga, text=task["stato"], text_color=colore_stato, width=150, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left", padx=10)
-            ctk.CTkLabel(riga, text=task["note"], anchor="w").pack(side="left", padx=10, fill="x", expand=True)
+            # Colonne allineate con larghezze stabili
+            ctk.CTkLabel(riga, text=task["data"], width=85, anchor="w").grid(row=0, column=0, padx=5, sticky="w")
+            ctk.CTkLabel(riga, text=task.get("negozio", "N/D"), width=130, anchor="w", font=ctk.CTkFont(weight="bold")).grid(row=0, column=1, padx=5, sticky="w")
+            ctk.CTkLabel(riga, text=task["operatore"], width=100, anchor="w").grid(row=0, column=2, padx=5, sticky="w")
+            ctk.CTkLabel(riga, text=task["stato"], text_color=colore_stato, width=130, anchor="w", font=ctk.CTkFont(weight="bold")).grid(row=0, column=3, padx=5, sticky="w")
             
-            btn_del = ctk.CTkButton(riga, text="🗑️", width=25, fg_color="transparent", hover_color="#c0392b", 
-                                    command=lambda t_id=task["id"]: self.controller.elimina_task(t_id))
-            btn_del.pack(side="right", padx=5)
+            # Note troncate visivamente se troppo lunghe per non spingere i bottoni fuori dallo schermo
+            lbl_nota_testo = task["note"].replace("\n", " ")
+            if len(lbl_nota_testo) > 60:
+                lbl_nota_testo = lbl_nota_testo[:57] + "..."
+                
+            ctk.CTkLabel(riga, text=lbl_nota_testo, anchor="w", justify="left").grid(row=0, column=4, padx=5, sticky="ew")
+            
+            # Contenitore pulsanti ancorato rigidamente a destra (Colonna 5)
+            btn_frame = ctk.CTkFrame(riga, fg_color="transparent")
+            btn_frame.grid(row=0, column=5, padx=5, sticky="e")
 
-            btn_edit = ctk.CTkButton(riga, text="✏️", width=25, fg_color="transparent", hover_color="#d35400", 
+            btn_edit = ctk.CTkButton(btn_frame, text="✏️", width=28, height=28, fg_color="transparent", hover_color="#d35400", 
                                      command=lambda t=task: self._carica_task_in_form(t))
-            btn_edit.pack(side="right", padx=2)
+            btn_edit.pack(side="left", padx=2)
+
+            btn_del = ctk.CTkButton(btn_frame, text="🗑️", width=28, height=28, fg_color="transparent", hover_color="#c0392b", 
+                                    command=lambda t_id=task["id"]: self.controller.elimina_task(t_id))
+            btn_del.pack(side="left", padx=2)
+            
             i += 1
 
-    # =====================================================================
-    # NUOVO METODO: AGGIORNA LE OPZIONI DEL COMBOBOX IN TEMPO REALE
-    # =====================================================================
     def aggiorna_opzioni_negozi(self):
         """Ricarica la lista alfabetica e attiva il filtro dinamico durante la digitazione."""
         if self.controller and hasattr(self.controller, "ottieni_nomi_negozi"):
@@ -187,20 +203,15 @@ class TaskView(ctk.CTkFrame):
                 if self.combo_negozio.get() not in tutti_i_negozi:
                     self.combo_negozio.set(tutti_i_negozi[0])
 
-                # --- LOGICA DI FILTRO DINAMICO ED EVOLUTO (Cerca mentre digiti) ---
-    def filtra_negozi_al_volo(event):
-        testo_inserito = self.combo_negozio.get().strip().lower()
-        
-        # Se il campo è vuoto mostra tutto l'elenco alfabetico
-        if not testo_inserito:
-            self.combo_negozio.configure(values=tutti_i_negozi)
-        else:
-            # Filtra solo i negozi che contengono i caratteri digitati
-            filtrati = [n for n in tutti_i_negozi if testo_inserito in n.lower()]
-            if filtrati:
-                self.combo_negozio.configure(values=filtrati)
-            else:
-                self.combo_negozio.configure(values=["Nessun riscontro"])
+                def filtra_negozi_al_volo(event):
+                    testo_inserito = self.combo_negozio.get().strip().lower()
+                    if not testo_inserito:
+                        self.combo_negozio.configure(values=tutti_i_negozi)
+                    else:
+                        filtrati = [n for n in tutti_i_negozi if testo_inserito in n.lower()]
+                        if filtrati:
+                            self.combo_negozio.configure(values=filtrati)
+                        else:
+                            self.combo_negozio.configure(values=["Nessun riscontro"])
 
-    # Colleghiamo l'evento di rilascio tasto sulla tastiera dentro il ComboBox
-        self.combo_negozio.bind("<KeyRelease>", filtra_negozi_al_volo)
+                self.combo_negozio.bind("<KeyRelease>", filtra_negozi_al_volo)

@@ -110,27 +110,44 @@ class MainController:
             ManualeController(nuovo_modello, nuova_vista)
             self.view.mostra_sezione(nuova_vista)
 
+ # =====================================================================
+    # 3. METODI LOGICI PER LA GESTIONE DELLE TASK REGISTRATE + ESPORTAZIONE CSV
     # =====================================================================
-    # 3. METODI LOGICI PER LA GESTIONE DELLE TASK REGISTRATE
-    # =====================================================================
+    def _esporta_task_in_csv_parallelo(self, tasks):
+        """Genera in parallelo un file CSV salvandolo sul server condiviso."""
+        import csv
+        try:
+            # Uso di una 'r' davanti per gestire correttamente il percorso UNC di rete Windows
+            percorso_csv = r"\\SrvDati\Dati-P\Computer Paolo\registro_task.csv"
+            
+            # (Opzionale) Sicurezza: Crea la cartella remota se per qualche motivo non dovesse esistere
+            os.makedirs(os.path.dirname(percorso_csv), exist_ok=True)
+            
+            colonne = ["id", "data", "negozio", "operatore", "stato", "note"]
+            
+            # Scrittura del CSV con codifica ottimizzata per Excel (utf-8-sig) e separatore punto e virgola
+            with open(percorso_csv, "w", newline="", encoding="utf-8-sig") as f:
+                writer = csv.DictWriter(f, fieldnames=colonne, delimiter=";")
+                writer.writeheader()
+                for task in tasks:
+                    task_pulita = task.copy()
+                    if task_pulita.get("note"):
+                        # Pulizia dei ritorni a capo per evitare di spezzare le righe nel CSV
+                        task_pulita["note"] = task_pulita["note"].replace("\n", " ").replace("\r", "")
+                    writer.writerow(task_pulita)
+        except Exception as e:
+            print(f"❌ Errore durante la generazione del CSV sul server condiviso: {e}")
+
     def ottieni_nomi_negozi(self):
         """Recupera la lista dei nomi dei negozi e garantisce l'ordinamento A-Z."""
         try:
-            # Sincronizza ed estrae i negozi aggiornati dal modello
             if hasattr(self.model_negozi, "carica_dati"):
                 self.model_negozi.carica_dati()
-            
             negozi_attuali = self.model_negozi.ottieni_tutti()
-            
-            # Estrae solo i nomi stringa puliti escludendo i duplicati
             nomi_unici = list(set([n.nome for n in negozi_attuali if n.nome]))
-            
-            # Ritorna l'ordinamento alfabetico definitivo
             return sorted(nomi_unici, key=str.lower)
-            
         except Exception as e:
             print(f"Errore nel recupero nomi negozi ordinati: {e}")
-        
         return ["Nessun Negozio Registrato"]
 
     def ottieni_tutte_task(self):
@@ -138,38 +155,51 @@ class MainController:
 
     def aggiungi_task(self, data, negozio, operatore, stato, note):
         tasks = self.model_task.leggi_task()
+        nuovo_id = max([int(t.get("id", 0)) for t in tasks if str(t.get("id", "")).isdigit()], default=0) + 1
+        
         nuova_task = {
-            "id": str(uuid.uuid4())[:8], # Genera un ID compatto univoco
+            "id": nuovo_id,
             "data": data,
-            "negozio": negozio,          # Salva il negozio selezionato
+            "negozio": negozio,
             "operatore": operatore,
             "stato": stato,
             "note": note
         }
         tasks.append(nuova_task)
         self.model_task.salva_task(tasks)
+        
+        # Sincronizzazione file CSV
+        self._esporta_task_in_csv_parallelo(tasks)
+        
         self.view_task.aggiorna_tabella()
 
     def aggiorna_task_esistente(self, task_id, data, negozio, operatore, stato, note):
-        """Trova la task tramite ID e aggiorna i suoi dati salvandoli nel file JSON."""
         tasks = self.model_task.leggi_task()
         
         for task in tasks:
-            if str(task["id"]) == str(task_id):
+            if str(task.get("id")) == str(task_id):
                 task["data"] = data
-                task["negozio"] = negozio  # Aggiorna il negozio
+                task["negozio"] = negozio
                 task["operatore"] = operatore
                 task["stato"] = stato
                 task["note"] = note
                 break
                 
         self.model_task.salva_task(tasks)
+        
+        # Sincronizzazione file CSV
+        self._esporta_task_in_csv_parallelo(tasks)
+        
         self.view_task.aggiorna_tabella()
 
     def elimina_task(self, task_id):
         tasks = self.model_task.leggi_task()
-        tasks = [t for t in tasks if str(t["id"]) != str(task_id)]
+        tasks = [t for t in tasks if str(t.get("id")) != str(task_id)]
         self.model_task.salva_task(tasks)
+        
+        # Sincronizzazione file CSV
+        self._esporta_task_in_csv_parallelo(tasks)
+        
         self.view_task.aggiorna_tabella()
 
     # =====================================================================
