@@ -49,10 +49,10 @@ class MainController:
         self.view_app = AppView(self.view.container_area)
         self.ctrl_app = AppController(self.model_app, self.view_app)
 
-        # Modulo Negozi
+        # Modulo Negozi (Passiamo 'self' come terzo parametro per abilitare la comunicazione)
         self.model_negozi = NegozioModel()
         self.view_negozi = NegozioView(self.view.container_area)
-        self.ctrl_negozi = NegozioController(self.model_negozi, self.view_negozi)
+        self.ctrl_negozi = NegozioController(self.model_negozi, self.view_negozi, self)
 
         # Modulo MT
         self.model_mt = MTModel()
@@ -113,14 +113,35 @@ class MainController:
     # =====================================================================
     # 3. METODI LOGICI PER LA GESTIONE DELLE TASK REGISTRATE
     # =====================================================================
+    def ottieni_nomi_negozi(self):
+        """Recupera la lista dei nomi dei negozi e garantisce l'ordinamento A-Z."""
+        try:
+            # Sincronizza ed estrae i negozi aggiornati dal modello
+            if hasattr(self.model_negozi, "carica_dati"):
+                self.model_negozi.carica_dati()
+            
+            negozi_attuali = self.model_negozi.ottieni_tutti()
+            
+            # Estrae solo i nomi stringa puliti escludendo i duplicati
+            nomi_unici = list(set([n.nome for n in negozi_attuali if n.nome]))
+            
+            # Ritorna l'ordinamento alfabetico definitivo
+            return sorted(nomi_unici, key=str.lower)
+            
+        except Exception as e:
+            print(f"Errore nel recupero nomi negozi ordinati: {e}")
+        
+        return ["Nessun Negozio Registrato"]
+
     def ottieni_tutte_task(self):
         return self.model_task.leggi_task()
 
-    def aggiungi_task(self, data, operatore, stato, note):
+    def aggiungi_task(self, data, negozio, operatore, stato, note):
         tasks = self.model_task.leggi_task()
         nuova_task = {
             "id": str(uuid.uuid4())[:8], # Genera un ID compatto univoco
             "data": data,
+            "negozio": negozio,          # Salva il negozio selezionato
             "operatore": operatore,
             "stato": stato,
             "note": note
@@ -129,9 +150,25 @@ class MainController:
         self.model_task.salva_task(tasks)
         self.view_task.aggiorna_tabella()
 
+    def aggiorna_task_esistente(self, task_id, data, negozio, operatore, stato, note):
+        """Trova la task tramite ID e aggiorna i suoi dati salvandoli nel file JSON."""
+        tasks = self.model_task.leggi_task()
+        
+        for task in tasks:
+            if str(task["id"]) == str(task_id):
+                task["data"] = data
+                task["negozio"] = negozio  # Aggiorna il negozio
+                task["operatore"] = operatore
+                task["stato"] = stato
+                task["note"] = note
+                break
+                
+        self.model_task.salva_task(tasks)
+        self.view_task.aggiorna_tabella()
+
     def elimina_task(self, task_id):
         tasks = self.model_task.leggi_task()
-        tasks = [t for t in tasks if t["id"] != task_id]
+        tasks = [t for t in tasks if str(t["id"]) != str(task_id)]
         self.model_task.salva_task(tasks)
         self.view_task.aggiorna_tabella()
 
@@ -165,19 +202,3 @@ class MainController:
         self.view.salva_configurazione()
         self.view.aggiorna_sidebar_grafica()
         self.collega_bottoni_dinamici()
-
-    def aggiorna_task_esistente(self, task_id, data, operatore, stato, note):
-        """Trova la task tramite ID e aggiorna i suoi dati salvandoli nel file JSON."""
-        tasks = self.model_task.leggi_task()
-        
-        for task in tasks:
-            # Forziamo entrambi gli ID a stringa per evitare bug se il vecchio ID era un numero
-            if str(task["id"]) == str(task_id):
-                task["data"] = data
-                task["operatore"] = operatore
-                task["stato"] = stato
-                task["note"] = note
-                break
-                
-        self.model_task.salva_task(tasks)
-        self.view_task.aggiorna_tabella() # Rinfresca lo schermo con i dati nuovi
