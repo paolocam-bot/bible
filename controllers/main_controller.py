@@ -2,7 +2,6 @@ from models.manuale_model import ManualeModel
 from models.negozio_model import NegozioModel
 from models.app_model import AppModel              
 from views.manuale_view import ManualeView
-from views.negozio_view import NegozioView
 from views.app_view import AppView                  
 from controllers.manuale_controller import ManualeController
 from controllers.negozio_controller import NegozioController
@@ -11,14 +10,21 @@ from models.brother_model import BrotherModel
 from views.brother_view import BrotherView
 from controllers.brother_controller import BrotherController
 
+# IMPORT ESATTO (Tutti i nomi delle classi ora coincidono al 100% con i loro file)
+from views.negozio_view import NegozioView
+
 # Import dei moduli MT
 from models.mt_model import MTModel
 from views.mt_view import MTView
 from controllers.mt_controller import MTController
 
-# Per poter generare i file JSON vuoti al volo
+# Import del nuovo modulo registro task
+from models.task_model import TaskModel
+from views.task_view import TaskView
+
 import os
 import json
+import uuid
 
 class MainController:
     def __init__(self, view):
@@ -43,7 +49,7 @@ class MainController:
         self.view_app = AppView(self.view.container_area)
         self.ctrl_app = AppController(self.model_app, self.view_app)
 
-        # Modulo Negozi (CORRETTO: Passato solo il container!)
+        # Modulo Negozi
         self.model_negozi = NegozioModel()
         self.view_negozi = NegozioView(self.view.container_area)
         self.ctrl_negozi = NegozioController(self.model_negozi, self.view_negozi)
@@ -53,11 +59,19 @@ class MainController:
         self.view_mt = MTView(self.view.container_area)
         self.ctrl_mt = MTController(self.model_mt, self.view_mt)
 
+        # INIZIALIZZAZIONE DEL NUOVO REGISTRO TASK FISSO
+        self.model_task = TaskModel(self.view.cartella_progetto)
+        self.view_task = TaskView(self.view.container_area)
+        self.view_task.imposta_controller(self)
+
         # =====================================================================
         # 2. COLLEGAMENTO COMANDI E PULSANTE GESTIONE
         # =====================================================================
         self.collega_bottoni_dinamici()
         self.view.imposta_controller_per_creazione(self)
+
+        # Aggancia l'evento click al bottone fisso Registro Task
+        self.view.btn_registro_task.configure(command=lambda: self.view.mostra_sezione(self.view_task))
 
         # Mostra la schermata iniziale all'avvio
         self.view.mostra_sezione(self.view_zebra)
@@ -86,25 +100,45 @@ class MainController:
         elif nome_db == "database_negozi.json":
             self.view.mostra_sezione(self.view_negozi)
         else:
-            # SOLUZIONE PER I MODULI DINAMICI:
-            # Creiamo un modello standard (punta a database_manuale.json di default)
             nuovo_modello = ManualeModel()
-            
-            # Sostituiamo il database aggirando l'init rigido se il tuo DAO espone il file_path
-            # Altrimenti, se anche il DAO è fisso, usiamo il trucco di riassegnare il file al volo:
             if hasattr(nuovo_modello, 'dao'):
                 nuovo_modello.dao.file_path = os.path.join(self.view.cartella_progetto, "data", nome_db)
                 if hasattr(nuovo_modello, 'carica_dati'):
-                    nuovo_modello.carica_dati() # Ricarica i dati dal file corretto
+                    nuovo_modello.carica_dati()
 
             nuova_vista = ManualeView(self.view.container_area)
             ManualeController(nuovo_modello, nuova_vista)
-            
-            # Ora la View può cambiare schermata senza eccezioni!
             self.view.mostra_sezione(nuova_vista)
 
+    # =====================================================================
+    # 3. METODI LOGICI PER LA GESTIONE DELLE TASK REGISTRATE
+    # =====================================================================
+    def ottieni_tutte_task(self):
+        return self.model_task.leggi_task()
+
+    def aggiungi_task(self, data, operatore, stato, note):
+        tasks = self.model_task.leggi_task()
+        nuova_task = {
+            "id": str(uuid.uuid4())[:8], # Genera un ID compatto univoco
+            "data": data,
+            "operatore": operatore,
+            "stato": stato,
+            "note": note
+        }
+        tasks.append(nuova_task)
+        self.model_task.salva_task(tasks)
+        self.view_task.aggiorna_tabella()
+
+    def elimina_task(self, task_id):
+        tasks = self.model_task.leggi_task()
+        tasks = [t for t in tasks if t["id"] != task_id]
+        self.model_task.salva_task(tasks)
+        self.view_task.aggiorna_tabella()
+
+    # =====================================================================
+    # 4. AGGIUNTA E RIMOZIONE CATEGORIE DINAMICHE
+    # =====================================================================
     def aggiungi_nuova_categoria(self, nome_categoria, nome_file_json):
-        """Crea in modo autonomo il file JSON vuoto su disco e aggiorna l'interfaccia."""
         id_nuovo = nome_categoria.lower().replace(" ", "_")
         nuova_sez = {
             "id": id_nuovo,
@@ -113,24 +147,37 @@ class MainController:
             "tipo": "manuale"
         }
         
-        # RISOLTO: Creiamo fisicamente il file .json in modo nativo, evitando di chiamare ManualeModel
         percorso_nuovo_db = os.path.join(self.view.cartella_progetto, "data", nome_file_json)
         if not os.path.exists(percorso_nuovo_db):
             try:
                 with open(percorso_nuovo_db, "w", encoding="utf-8") as f:
-                    json.dump([], f, indent=4) # Scrive una lista vuota [] su disco
+                    json.dump([], f, indent=4)
             except Exception as e:
                 print(f"Errore nella scrittura fisica del file JSON: {e}")
 
-        # Aggiorna l'interfaccia grafica
         self.view.configurazione_sezioni.append(nuova_sez)
         self.view.salva_configurazione()
         self.view.aggiorna_sidebar_grafica()
         self.collega_bottoni_dinamici()
 
     def rimuovi_categoria(self, id_categoria):
-        """Rimuove una categoria dalla configurazione e aggiorna la UI."""
         self.view.configurazione_sezioni = [s for s in self.view.configurazione_sezioni if s["id"] != id_categoria]
         self.view.salva_configurazione()
         self.view.aggiorna_sidebar_grafica()
         self.collega_bottoni_dinamici()
+
+    def aggiorna_task_esistente(self, task_id, data, operatore, stato, note):
+        """Trova la task tramite ID e aggiorna i suoi dati salvandoli nel file JSON."""
+        tasks = self.model_task.leggi_task()
+        
+        for task in tasks:
+            # Forziamo entrambi gli ID a stringa per evitare bug se il vecchio ID era un numero
+            if str(task["id"]) == str(task_id):
+                task["data"] = data
+                task["operatore"] = operatore
+                task["stato"] = stato
+                task["note"] = note
+                break
+                
+        self.model_task.salva_task(tasks)
+        self.view_task.aggiorna_tabella() # Rinfresca lo schermo con i dati nuovi

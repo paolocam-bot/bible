@@ -11,7 +11,7 @@ class MainView(ctk.CTk):
         self.title("Holly-HelpDesK")
         self.geometry("1100x650")
 
-        # 1. PERCORSO LOGO UNIVERSALE (Funziona in VS Code e in Nuitka/PyInstaller)
+        # 1. PERCORSO LOGO UNIVERSALE
         if "__compiled__" in globals():
             self.cartella_progetto = os.path.dirname(os.path.abspath(sys.argv[0]))
         elif getattr(sys, 'frozen', False):
@@ -23,10 +23,9 @@ class MainView(ctk.CTk):
         percorso_logo = os.path.join(self.cartella_progetto, "data", "app.png")
         self.percorso_config = os.path.join(self.cartella_progetto, "data", "config_app.json")
 
-        # Carica il file di configurazione esterno o usa quello di default
         self.carica_configurazione()
 
-        # Layout: 2 colonne (Menu laterale e Area Contenuto)
+        # Layout: 2 colonne
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -35,18 +34,30 @@ class MainView(ctk.CTk):
         self.sidebar_globale.grid(row=0, column=0, sticky="nsew")
         self.sidebar_globale.pack_propagate(False)
 
-        # Caricamento Logo Visivo nella Sidebar
         try:
             pil_img = Image.open(percorso_logo)
             logo_sidebar = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(120, 120))
             self.lbl_logo = ctk.CTkLabel(self.sidebar_globale, image=logo_sidebar, text="")
-            self.lbl_logo.pack(padx=20, pady=(25, 20))
-        except Exception as e:
-            print(f"Impossibile caricare il logo nella sidebar: {e}")
+            self.lbl_logo.pack(padx=20, pady=(25, 10))
+        except Exception:
             self.lbl_logo = ctk.CTkLabel(self.sidebar_globale, text="⚙️ HUB UTILITY", font=ctk.CTkFont(size=16, weight="bold"))
             self.lbl_logo.pack(padx=20, pady=20)
 
-        # Contenitore per i bottoni delle categorie (per pulirli e ridisegnarli facilmente)
+        # SEZIONE FISSA: Bottone Registro Task (Posizionato stabilmente in alto)
+        self.btn_registro_task = ctk.CTkButton(
+            self.sidebar_globale, 
+            text="📋 Registro Task", 
+            fg_color="#2c3e50", 
+            hover_color="#34495e",
+            anchor="w"
+        )
+        self.btn_registro_task.pack(fill="x", padx=15, pady=(10, 15))
+
+        # Divisore estetico
+        divisore = ctk.CTkFrame(self.sidebar_globale, height=2, fg_color="#555")
+        divisore.pack(fill="x", padx=15, pady=(0, 10))
+
+        # Contenitore dinamico per i bottoni delle categorie tradizionali
         self.menu_bottoni_frame = ctk.CTkFrame(self.sidebar_globale, fg_color="transparent")
         self.menu_bottoni_frame.pack(fill="both", expand=True)
 
@@ -56,12 +67,10 @@ class MainView(ctk.CTk):
         self.container_area.grid_columnconfigure(0, weight=1)
         self.container_area.grid_rowconfigure(0, weight=1)
 
-        # Inizializza il dizionario dei bottoni e disegna la sidebar
         self.bottoni_sidebar = {}
         self.aggiorna_sidebar_grafica()
 
     def carica_configurazione(self):
-        """Legge le categorie dal file JSON esterno se esiste, altrimenti usa il default."""
         if os.path.exists(self.percorso_config):
             try:
                 with open(self.percorso_config, "r", encoding="utf-8") as f:
@@ -70,7 +79,6 @@ class MainView(ctk.CTk):
             except Exception:
                 pass
         
-        # Configurazione di fallback iniziale se il file non esiste
         self.configurazione_sezioni = [
             {"id": "zebra",    "testo": "🖨️ Assistente Zebra",       "db": "database_manuale.json",   "tipo": "manuale"},
             {"id": "brother",  "testo": "🖨️ Assistente Brother",     "db": "database_brother.json",   "tipo": "manuale"},
@@ -81,35 +89,27 @@ class MainView(ctk.CTk):
         self.salva_configurazione()
 
     def salva_configurazione(self):
-        """Salva lo stato attuale delle categorie nel file JSON."""
         os.makedirs(os.path.dirname(self.percorso_config), exist_ok=True)
         with open(self.percorso_config, "w", encoding="utf-8") as file:
             json.dump(self.configurazione_sezioni, file, indent=4, ensure_ascii=False)
 
     def aggiorna_sidebar_grafica(self):
-        """Svuota e ricostruisce i bottoni nella sidebar (utile dopo un inserimento o rimozione)."""
-        # Elimina i vecchi bottoni a schermo
         for widget in self.menu_bottoni_frame.winfo_children():
             widget.destroy()
-        
         self.bottoni_sidebar.clear()
 
-        # Ridisegna i bottoni basandosi sulla configurazione aggiornata
         for sezione in self.configurazione_sezioni:
             btn = ctk.CTkButton(self.menu_bottoni_frame, text=sezione["testo"], anchor="w")
             btn.pack(fill="x", padx=15, pady=5)
             self.bottoni_sidebar[sezione["id"]] = btn
 
     def mostra_sezione(self, frame_sezione):
-        """Nasconde gli altri frame e porta in primo piano quello selezionato."""
         frame_sezione.grid(row=0, column=0, sticky="nsew")
         frame_sezione.tkraise()
 
     def imposta_controller_per_creazione(self, controller):
-        """Riceve il controller per poter invocare la creazione o rimozione delle categorie."""
         self.controller_riferimento = controller
         
-        # Crea il pulsante di gestione in fondo alla sidebar
         self.btn_aggiungi_cat = ctk.CTkButton(
             self.sidebar_globale, 
             text="⚙️ Gestisci Categorie", 
@@ -120,18 +120,15 @@ class MainView(ctk.CTk):
         self.btn_aggiungi_cat.pack(side="bottom", fill="x", padx=15, pady=15)
 
     def apri_popup_gestione_categorie(self):
-        """Apre una finestra popup per aggiungere o rimuovere le categorie esistenti."""
         popup = ctk.CTkToplevel(self)
         popup.title("Gestione Categorie")
-        popup.geometry("450x650")
+        popup.geometry("450x420")
         popup.after(100, lambda: popup.focus())
         popup.grab_set()
 
-        # --- SEZIONE 1: RIMOZIONE CATEGORIE ESISTENTI ---
         lbl_rimuovi = ctk.CTkLabel(popup, text="❌ Rimuovi Categorie Esistenti:", font=ctk.CTkFont(weight="bold"))
         lbl_rimuovi.pack(pady=(10, 5), padx=20, anchor="w")
 
-        # Frame con scrollbar per listare i bottoni attuali
         scroll_frame = ctk.CTkScrollableFrame(popup, height=120)
         scroll_frame.pack(fill="x", padx=20, pady=5)
 
@@ -140,7 +137,6 @@ class MainView(ctk.CTk):
             popup.destroy()
 
         for sezione in self.configurazione_sezioni:
-            # Non permettiamo di cancellare l'anagrafica negozi principale o zebra per sicurezza grafica iniziale
             if sezione["id"] == "negozi":
                 continue
                 
@@ -156,11 +152,9 @@ class MainView(ctk.CTk):
             )
             btn_del.pack(side="right", padx=5)
 
-        # Separatore visivo
         separatore = ctk.CTkFrame(popup, height=2, fg_color="gray")
         separatore.pack(fill="x", padx=20, pady=15)
 
-        # --- SEZIONE 2: AGGIUNTA NUOVA CATEGORIA ---
         lbl_aggiungi = ctk.CTkLabel(popup, text="➕ Aggiungi Nuova Categoria:", font=ctk.CTkFont(weight="bold"))
         lbl_aggiungi.pack(pady=(0, 5), padx=20, anchor="w")
 
