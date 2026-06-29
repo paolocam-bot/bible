@@ -257,5 +257,12 @@
         "coordinatore": "Arianna Paltan",
         "codclifor": "C    24",
         "descrizione_conto": "VULCANO"
+    },
+    {
+        "codice_breve": "ttt",
+        "nome": "ttt",
+        "coordinatore": "ttt",
+        "codclifor": "ttt",
+        "descrizione_conto": "ttt"
     }
 ]

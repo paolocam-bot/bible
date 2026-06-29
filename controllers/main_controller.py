@@ -1,6 +1,5 @@
 import os
 import json
-import csv
 
 # Import dei Modelli
 from models.manuale_model import ManualeModel
@@ -21,6 +20,7 @@ from views.task_view import TaskView
 # IMPORT DEI CONTROLLER NECESSARI
 from controllers.negozio_controller import NegozioController
 from controllers.base_knowledge_controller import BaseKnowledgeController
+from controllers.task_controller import TaskController # <-- AGGIUNTO
 
 class MainController:
     def __init__(self, view):
@@ -29,23 +29,18 @@ class MainController:
         # =====================================================================
         # 1. INIZIALIZZAZIONE CON BASEKNOWLEDGECONTROLLER (Ex moduli storici)
         # =====================================================================
-        
-        # Modulo Zebra (Usa il manuale di default)
         self.model_zebra = ManualeModel()
         self.view_zebra = ManualeView(self.view.container_area)
         self.ctrl_zebra = BaseKnowledgeController(self.model_zebra, self.view_zebra, "Manuale Zebra")
 
-        # Modulo Brother
         self.model_brother = BrotherModel()
         self.view_brother = BrotherView(self.view.container_area)
         self.ctrl_brother = BaseKnowledgeController(self.model_brother, self.view_brother, "Guasto Brother")
 
-        # Modulo Problemi App
         self.model_app = AppModel()
         self.view_app = AppView(self.view.container_area)
         self.ctrl_app = BaseKnowledgeController(self.model_app, self.view_app, "Anomalia Applicazione")
 
-        # Modulo MT
         self.model_mt = MTModel()
         self.view_mt = MTView(self.view.container_area)
         self.ctrl_mt = BaseKnowledgeController(self.model_mt, self.view_mt, "Segnalazione MT")
@@ -53,16 +48,15 @@ class MainController:
         # =====================================================================
         # 2. INIZIALIZZAZIONE MODULI CORE & GESTIONALI
         # =====================================================================
-        
-        # Modulo Negozi (Abilitata comunicazione tramite self)
         self.model_negozi = NegozioModel()
         self.view_negozi = NegozioView(self.view.container_area)
         self.ctrl_negozi = NegozioController(self.model_negozi, self.view_negozi, self)
 
-        # Modulo Registro Task Fisso
+        # Modulo Registro Task (Refactored con il suo Controller dedicato)
         self.model_task = TaskModel(self.view.cartella_progetto)
         self.view_task = TaskView(self.view.container_area)
-        self.view_task.imposta_controller(self)
+        self.ctrl_task = TaskController(self.model_task, self.view_task, self) # <-- AGGIUNTO
+        self.view_task.imposta_controller(self.ctrl_task)                     # <-- MODIFICATO
 
         # =====================================================================
         # 3. COLLEGAMENTO COMANDI E NAVIGAZIONE
@@ -70,10 +64,7 @@ class MainController:
         self.collega_bottoni_dinamici()
         self.view.imposta_controller_per_creazione(self)
 
-        # Aggancia l'evento click al bottone fisso Registro Task
         self.view.btn_registro_task.configure(command=lambda: self.view.mostra_sezione(self.view_task))
-
-        # Mostra la schermata iniziale all'avvio
         self.view.mostra_sezione(self.view_zebra)
 
     def collega_bottoni_dinamici(self):
@@ -100,7 +91,6 @@ class MainController:
         elif nome_db == "database_negozi.json":
             self.view.mostra_sezione(self.view_negozi)
         else:
-            # Creazione a runtime del modulo personalizzato tramite BaseKnowledgeController
             nuovo_modello = ManualeModel()
             if hasattr(nuovo_modello, 'dao'):
                 nuovo_modello.dao.file_path = os.path.join(self.view.cartella_progetto, "data", nome_db)
@@ -108,40 +98,14 @@ class MainController:
                     nuovo_modello.carica_dati()
 
             nuova_vista = ManualeView(self.view.container_area)
-            
-            # Recupera dinamicamente il nome pulito della sezione per i popup del controller
             config_sezione = next((s for s in self.view.configurazione_sezioni if s["db"] == nome_db), None)
             titolo_popup = config_sezione["testo"].replace("📋 ", "").strip() if config_sezione else "Manuale Custom"
             
-            # Inizializza il BaseKnowledgeController unico!
             BaseKnowledgeController(nuovo_modello, nuova_vista, titolo_popup)
-            self.view.mostra_sezione(nuova_vista)
-
-    # =====================================================================
-    # 4. METODI LOGICI PER LA GESTIONE DELLE TASK REGISTRATE + ESPORTAZIONE CSV
-    # =====================================================================
-    def _esporta_task_in_csv_parallelo(self, tasks):
-        """Genera in parallelo un file CSV salvandolo sul server condiviso."""
-        try:
-            # Percorso UNC di rete Windows mantenuto intatto
-            percorso_csv = r"\\SrvDati\Dati-P\Computer Paolo\registro_task.csv"
-            os.makedirs(os.path.dirname(percorso_csv), exist_ok=True)
-            
-            colonne = ["id", "data", "negozio", "operatore", "stato", "note"]
-            
-            with open(percorso_csv, "w", newline="", encoding="utf-8-sig") as f:
-                writer = csv.DictWriter(f, fieldnames=colonne, delimiter=";")
-                writer.writeheader()
-                for task in tasks:
-                    task_pulita = task.copy()
-                    if task_pulita.get("note"):
-                        task_pulita["note"] = task_pulita["note"].replace("\n", " ").replace("\r", "")
-                    writer.writerow(task_pulita)
-        except Exception as e:
-            print(f"❌ Errore durante la generazione del CSV sul server condiviso: {e}")
+            self.view.mostra_sezione(nueva_vista)
 
     def ottieni_nomi_negozi(self):
-        """Recupera la lista dei nomi dei negozi e garantisce l'ordinamento A-Z."""
+        """Mantenuto qui perché serve al TaskController per popolare la ComboBox dei negozi."""
         try:
             if hasattr(self.model_negozi, "carica_dati"):
                 self.model_negozi.carica_dati()
@@ -151,48 +115,6 @@ class MainController:
         except Exception as e:
             print(f"Errore nel recupero nomi negozi ordinati: {e}")
         return ["Nessun Negozio Registrato"]
-
-    def ottieni_tutte_task(self):
-        return self.model_task.leggi_task()
-
-    def aggiungi_task(self, data, negozio, operatore, stato, note):
-        tasks = self.model_task.leggi_task()
-        nuovo_id = max([int(t.get("id", 0)) for t in tasks if str(t.get("id", "")).isdigit()], default=0) + 1
-        
-        nuova_task = {
-            "id": nuovo_id,
-            "data": data,
-            "negozio": negozio,
-            "operatore": operatore,
-            "stato": stato,
-            "note": note
-        }
-        tasks.append(nuova_task)
-        self.model_task.salva_task(tasks)
-        self._esporta_task_in_csv_parallelo(tasks)
-        self.view_task.aggiorna_tabella()
-
-    def aggiorna_task_esistente(self, task_id, data, negozio, operatore, stato, note):
-        tasks = self.model_task.leggi_task()
-        for task in tasks:
-            if str(task.get("id")) == str(task_id):
-                task["data"] = data
-                task["negozio"] = negozio
-                task["operatore"] = operatore
-                task["stato"] = stato
-                task["note"] = note
-                break
-                
-        self.model_task.salva_task(tasks)
-        self._esporta_task_in_csv_parallelo(tasks)
-        self.view_task.aggiorna_tabella()
-
-    def elimina_task(self, task_id):
-        tasks = self.model_task.leggi_task()
-        tasks = [t for t in tasks if str(t.get("id")) != str(task_id)]
-        self.model_task.salva_task(tasks)
-        self._esporta_task_in_csv_parallelo(tasks)
-        self.view_task.aggiorna_tabella()
 
     # =====================================================================
     # 5. AGGIUNTA E RIMOZIONE CATEGORIE DINAMICHE

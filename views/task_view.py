@@ -9,7 +9,36 @@ class TaskView(ctk.CTkFrame):
 
         # Titolo della Sezione
         lbl_titolo = ctk.CTkLabel(self, text="📋 Registro Task & Interventi Conclusi", font=ctk.CTkFont(size=20, weight="bold"))
-        lbl_titolo.pack(pady=(10, 15), anchor="w", padx=10)
+        lbl_titolo.pack(pady=(10, 10), anchor="w", padx=10)
+
+        # --- 📊 NUOVO: DASHBOARD DELLE STATISTICHE ---
+        self.stats_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.stats_frame.pack(fill="x", padx=10, pady=(0, 10))
+
+        # Configurazione a 3 colonne uguali e responsive
+        self.stats_frame.grid_columnconfigure((0, 1, 2), weight=1, uniform="equal")
+
+        # Card 1: Task Pendenti (In corso)
+        self.card_pendenti = ctk.CTkFrame(self.stats_frame, fg_color=("#f8d7da", "#2c1a1c"), border_width=1, border_color="#f5c2c7")
+        self.card_pendenti.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        self.lbl_val_pendenti = ctk.CTkLabel(self.card_pendenti, text="0", font=ctk.CTkFont(size=24, weight="bold"), text_color=("#721c24", "#ea868f"))
+        self.lbl_val_pendenti.pack(pady=(10, 0))
+        ctk.CTkLabel(self.card_pendenti, text="🔴 Task in Corso", font=ctk.CTkFont(size=12, weight="bold"), text_color=("#721c24", "#ea868f")).pack(pady=(0, 10))
+
+        # Card 2: Interventi Completati Oggi
+        self.card_oggi = ctk.CTkFrame(self.stats_frame, fg_color=("#d1e7dd", "#1a2c20"), border_width=1, border_color="#badbcc")
+        self.card_oggi.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        self.lbl_val_oggi = ctk.CTkLabel(self.card_oggi, text="0", font=ctk.CTkFont(size=24, weight="bold"), text_color=("#155724", "#75b798"))
+        self.lbl_val_oggi.pack(pady=(10, 0))
+        ctk.CTkLabel(self.card_oggi, text="🟢 Completati Oggi", font=ctk.CTkFont(size=12, weight="bold"), text_color=("#155724", "#75b798")).pack(pady=(0, 10))
+
+        # Card 3: Negozio più Problematico (Settimana)
+        self.card_critico = ctk.CTkFrame(self.stats_frame, fg_color=("#fff3cd", "#2c251a"), border_width=1, border_color="#ffecb5")
+        self.card_critico.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+        self.lbl_val_critico = ctk.CTkLabel(self.card_critico, text="Nessuno", font=ctk.CTkFont(size=15, weight="bold"), text_color=("#856404", "#ffda6a"))
+        self.lbl_val_critico.pack(pady=(14, 0))
+        ctk.CTkLabel(self.card_critico, text="📊 Top Critico (Settimana)", font=ctk.CTkFont(size=12, weight="bold"), text_color=("#856404", "#ffda6a")).pack(pady=(0, 10))
+        # --- FINE DASHBOARD ---
 
         # --- FORM DI INSERIMENTO / MODIFICA ---
         self.form_frame = ctk.CTkFrame(self)
@@ -43,15 +72,14 @@ class TaskView(ctk.CTkFrame):
         self.combo_stato = ctk.CTkComboBox(self.form_frame, values=["Risolto", "Da finire / Incompleto", "In attesa feedback"], width=160)
         self.combo_stato.grid(row=0, column=7, padx=5, pady=5, sticky="ew")
 
-        # Riga 1 & 2: Campo Note ampio (Cambiamo in CTkTextbox per avere più righe)
+        # Riga 1: Campo Note ampio
         lbl_note = ctk.CTkLabel(self.form_frame, text="Note / Dettagli:")
         lbl_note.grid(row=1, column=0, padx=5, pady=(5, 0), sticky="nw")
         
-        # CTkTextbox gestisce nativamente il testo esteso su più righe
         self.entry_note = ctk.CTkTextbox(self.form_frame, height=65, activate_scrollbars=True)
         self.entry_note.grid(row=1, column=1, columnspan=7, padx=5, pady=5, sticky="ew")
 
-        # Riga 3: Contenitore Pulsanti di Azione (Allineati a destra in basso)
+        # Riga 2: Contenitore Pulsanti di Azione
         self.azioni_btn_frame = ctk.CTkFrame(self.form_frame, fg_color="transparent")
         self.azioni_btn_frame.grid(row=2, column=1, columnspan=7, padx=5, pady=(0, 5), sticky="e")
 
@@ -88,12 +116,21 @@ class TaskView(ctk.CTkFrame):
         self.aggiorna_opzioni_negozi()
         self.aggiorna_tabella()
 
+    def aggiorna_dashboard(self, num_pendenti, num_oggi, negozio_critico):
+        """Metodo pubblico invocabile dal controller per aggiornare i valori della dashboard."""
+        self.lbl_val_pendenti.configure(text=str(num_pendenti))
+        self.lbl_val_oggi.configure(text=str(num_oggi))
+        
+        # Tronca visivamente il testo del negozio critico se supera lo spazio della scheda
+        if len(negozio_critico) > 24:
+            negozio_critico = negozio_critico[:21] + "..."
+        self.lbl_val_critico.configure(text=negozio_critico)
+
     def _on_azione_click(self):
         data = self.entry_data.get().strip()
         negozio = self.combo_negozio.get()
         op = self.entry_operatore.get().strip()
         stato = self.combo_stato.get()
-        # Per la Textbox serve estrarre il testo partendo da riga 1, carattere 0 fino alla fine
         note = self.entry_note.get("1.0", "end").strip()
 
         if not (data and op and note):
@@ -119,7 +156,6 @@ class TaskView(ctk.CTkFrame):
         self.entry_operatore.insert(0, task["operatore"])
         self.combo_stato.set(task["stato"])
         
-        # Pulizia e inserimento corretti per la Textbox
         self.entry_note.delete("1.0", "end")
         self.entry_note.insert("1.0", task["note"])
 
@@ -159,27 +195,23 @@ class TaskView(ctk.CTkFrame):
 
             bg_riga = "#2c3e50" if i % 2 == 0 else "transparent"
             
-            # Usiamo un layout a griglia (grid) sulla riga invece del pack, così i pulsanti rimangono ancorati a destra
             riga = ctk.CTkFrame(self.scroll_table, fg_color=bg_riga, height=40)
             riga.pack(fill="x", pady=2, padx=5)
-            riga.grid_columnconfigure(4, weight=1) # La colonna delle note si espande, le altre sono fisse
+            riga.grid_columnconfigure(4, weight=1) 
 
             colore_stato = "#2ecc71" if task["stato"] == "Risolto" else ("#e67e22" if "Da finire" in task["stato"] else "#f1c40f")
 
-            # Colonne allineate con larghezze stabili
             ctk.CTkLabel(riga, text=task["data"], width=85, anchor="w").grid(row=0, column=0, padx=5, sticky="w")
             ctk.CTkLabel(riga, text=task.get("negozio", "N/D"), width=130, anchor="w", font=ctk.CTkFont(weight="bold")).grid(row=0, column=1, padx=5, sticky="w")
             ctk.CTkLabel(riga, text=task["operatore"], width=100, anchor="w").grid(row=0, column=2, padx=5, sticky="w")
             ctk.CTkLabel(riga, text=task["stato"], text_color=colore_stato, width=130, anchor="w", font=ctk.CTkFont(weight="bold")).grid(row=0, column=3, padx=5, sticky="w")
             
-            # Note troncate visivamente se troppo lunghe per non spingere i bottoni fuori dallo schermo
             lbl_nota_testo = task["note"].replace("\n", " ")
             if len(lbl_nota_testo) > 60:
                 lbl_nota_testo = lbl_nota_testo[:57] + "..."
                 
             ctk.CTkLabel(riga, text=lbl_nota_testo, anchor="w", justify="left").grid(row=0, column=4, padx=5, sticky="ew")
             
-            # Contenitore pulsanti ancorato rigidamente a destra (Colonna 5)
             btn_frame = ctk.CTkFrame(riga, fg_color="transparent")
             btn_frame.grid(row=0, column=5, padx=5, sticky="e")
 
