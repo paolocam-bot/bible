@@ -3,6 +3,7 @@ import os
 import sys
 import json
 from PIL import Image
+from utils.stile import Stile  # <-- Importazione del Design System Centralizzato
 
 class MainView(ctk.CTk):
     def __init__(self):
@@ -10,6 +11,9 @@ class MainView(ctk.CTk):
 
         self.title("Holly-HelpDesK")
         self.geometry("1100x650")
+
+        # Configurazione dello sfondo della finestra principale coerente con il tema
+        self.configure(fg_color=Stile.BG_PRINCIPALE)
 
         # 1. PERCORSO LOGO UNIVERSALE
         if "__compiled__" in globals():
@@ -29,8 +33,8 @@ class MainView(ctk.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # 2. Sidebar di Navigazione Globale
-        self.sidebar_globale = ctk.CTkFrame(self, width=200, corner_radius=0)
+        # 2. Sidebar di Navigazione Globale (Struttura card scura/coerente)
+        self.sidebar_globale = ctk.CTkFrame(self, width=200, corner_radius=0, fg_color=Stile.BG_CARD)
         self.sidebar_globale.grid(row=0, column=0, sticky="nsew")
         self.sidebar_globale.pack_propagate(False)
 
@@ -40,21 +44,29 @@ class MainView(ctk.CTk):
             self.lbl_logo = ctk.CTkLabel(self.sidebar_globale, image=logo_sidebar, text="")
             self.lbl_logo.pack(padx=20, pady=(25, 10))
         except Exception:
-            self.lbl_logo = ctk.CTkLabel(self.sidebar_globale, text="⚙️ HUB UTILITY", font=ctk.CTkFont(size=16, weight="bold"))
+            self.lbl_logo = ctk.CTkLabel(
+                self.sidebar_globale, 
+                text="⚙️ HUB UTILITY", 
+                font=Stile.FONT_SUBTITLE,
+                text_color=Stile.TEXT_MAIN
+            )
             self.lbl_logo.pack(padx=20, pady=20)
 
-        # SEZIONE FISSA: Bottone Registro Task (Posizionato stabilmente in alto)
+        # SEZIONE FISSA: Bottone Registro Task (Stile Primario)
         self.btn_registro_task = ctk.CTkButton(
             self.sidebar_globale, 
             text="📋 Registro Task", 
-            fg_color="#2c3e50", 
-            hover_color="#34495e",
-            anchor="w"
+            font=Stile.FONT_NORMALE,
+            fg_color=Stile.BTN_PRIMARY_BG, 
+            hover_color=Stile.BTN_PRIMARY_HOVER,
+            text_color=Stile.BTN_PRIMARY_TEXT,
+            anchor="w",
+            corner_radius=Stile.CORNER_RADIUS_INPUT
         )
         self.btn_registro_task.pack(fill="x", padx=15, pady=(10, 15))
 
-        # Divisore estetico
-        divisore = ctk.CTkFrame(self.sidebar_globale, height=2, fg_color="#555")
+        # Divisore estetico coordinato
+        divisore = ctk.CTkFrame(self.sidebar_globale, height=2, fg_color=Stile.BTN_SECONDARY_BG)
         divisore.pack(fill="x", padx=15, pady=(0, 10))
 
         # Contenitore dinamico per i bottoni delle categorie tradizionali
@@ -99,7 +111,17 @@ class MainView(ctk.CTk):
         self.bottoni_sidebar.clear()
 
         for sezione in self.configurazione_sezioni:
-            btn = ctk.CTkButton(self.menu_bottoni_frame, text=sezione["testo"], anchor="w")
+            # Pulsanti di navigazione standard (Stile Secondario)
+            btn = ctk.CTkButton(
+                self.menu_bottoni_frame, 
+                text=sezione["testo"], 
+                font=Stile.FONT_NORMALE,
+                fg_color=Stile.BTN_SECONDARY_BG,
+                hover_color=Stile.BTN_SECONDARY_HOVER,
+                text_color=Stile.BTN_SECONDARY_TEXT,
+                anchor="w",
+                corner_radius=Stile.CORNER_RADIUS_INPUT
+            )
             btn.pack(fill="x", padx=15, pady=5)
             self.bottoni_sidebar[sezione["id"]] = btn
 
@@ -110,11 +132,17 @@ class MainView(ctk.CTk):
     def imposta_controller_per_creazione(self, controller):
         self.controller_riferimento = controller
         
+        # Estrazione colore semantico di successo per la gestione delle categorie
+        bg_successo, text_successo = Stile.ottieni_stile_stato("risolto")
+
         self.btn_aggiungi_cat = ctk.CTkButton(
             self.sidebar_globale, 
             text="⚙️ Gestisci Categorie", 
-            fg_color="#27ae60", 
-            hover_color="#219653",
+            font=Stile.FONT_BADGE,
+            fg_color=bg_successo, 
+            hover_color=("#198754", "#0f5132"), # Hover verde coordinato
+            text_color=text_successo,
+            corner_radius=Stile.CORNER_RADIUS_INPUT,
             command=self.apri_popup_gestione_categorie
         )
         self.btn_aggiungi_cat.pack(side="bottom", fill="x", padx=15, pady=15)
@@ -123,18 +151,31 @@ class MainView(ctk.CTk):
         popup = ctk.CTkToplevel(self)
         popup.title("Gestione Categorie")
         popup.geometry("450x420")
+        popup.configure(fg_color=Stile.BG_PRINCIPALE)
         popup.after(100, lambda: popup.focus())
         popup.grab_set()
 
-        lbl_rimuovi = ctk.CTkLabel(popup, text="❌ Rimuovi Categorie Esistenti:", font=ctk.CTkFont(weight="bold"))
-        lbl_rimuovi.pack(pady=(10, 5), padx=20, anchor="w")
+        lbl_rimuovi = ctk.CTkLabel(
+            popup, 
+            text="❌ Rimuovi Categorie Esistenti:", 
+            font=Stile.FONT_SUBTITLE,
+            text_color=Stile.TEXT_MAIN
+        )
+        lbl_rimuovi.pack(pady=(15, 5), padx=20, anchor="w")
 
-        scroll_frame = ctk.CTkScrollableFrame(popup, height=120)
+        scroll_frame = ctk.CTkScrollableFrame(
+            popup, 
+            height=120, 
+            fg_color=Stile.BG_CARD, 
+            corner_radius=Stile.CORNER_RADIUS_CARD
+        )
         scroll_frame.pack(fill="x", padx=20, pady=5)
 
         def elimina_categoria(id_da_eliminare):
             self.controller_riferimento.rimuovi_categoria(id_da_eliminare)
             popup.destroy()
+
+        bg_pericolo, text_pericolo = Stile.ottieni_stile_stato("eliminato")
 
         for sezione in self.configurazione_sezioni:
             if sezione["id"] == "negozi":
@@ -143,29 +184,59 @@ class MainView(ctk.CTk):
             item_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
             item_frame.pack(fill="x", pady=2)
             
-            lbl_item = ctk.CTkLabel(item_frame, text=sezione["testo"], anchor="w")
+            lbl_item = ctk.CTkLabel(
+                item_frame, 
+                text=sezione["testo"], 
+                font=Stile.FONT_NORMALE,
+                text_color=Stile.TEXT_MAIN,
+                anchor="w"
+            )
             lbl_item.pack(side="left", padx=5, fill="x", expand=True)
             
             btn_del = ctk.CTkButton(
-                item_frame, text="❌", width=30, fg_color="#c0392b", hover_color="#e74c3c",
+                item_frame, 
+                text="❌", 
+                width=32, 
+                font=Stile.FONT_BADGE,
+                fg_color=bg_pericolo, 
+                hover_color=("#dc3545", "#842029"),
+                text_color=text_pericolo,
+                corner_radius=Stile.CORNER_RADIUS_INPUT,
                 command=lambda id_sez=sezione["id"]: elimina_categoria(id_sez)
             )
             btn_del.pack(side="right", padx=5)
 
-        separatore = ctk.CTkFrame(popup, height=2, fg_color="gray")
+        separatore = ctk.CTkFrame(popup, height=2, fg_color=Stile.BTN_SECONDARY_BG)
         separatore.pack(fill="x", padx=20, pady=15)
 
-        lbl_aggiungi = ctk.CTkLabel(popup, text="➕ Aggiungi Nuova Categoria:", font=ctk.CTkFont(weight="bold"))
+        lbl_aggiungi = ctk.CTkLabel(
+            popup, 
+            text="➕ Aggiungi Nuova Categoria:", 
+            font=Stile.FONT_SUBTITLE,
+            text_color=Stile.TEXT_MAIN
+        )
         lbl_aggiungi.pack(pady=(0, 5), padx=20, anchor="w")
 
-        lbl_nome = ctk.CTkLabel(popup, text="Nome Assistente (es: Epson):")
+        lbl_nome = ctk.CTkLabel(popup, text="Nome Assistente (es: Epson):", font=Stile.FONT_NORMALE, text_color=Stile.TEXT_MUTED)
         lbl_nome.pack(pady=2)
-        entry_nome = ctk.CTkEntry(popup, width=300)
+        entry_nome = ctk.CTkEntry(
+            popup, 
+            width=300, 
+            font=Stile.FONT_NORMALE, 
+            text_color=Stile.TEXT_MAIN, 
+            corner_radius=Stile.CORNER_RADIUS_INPUT
+        )
         entry_nome.pack(pady=2)
 
-        lbl_db = ctk.CTkLabel(popup, text="Nome File Database (es: database_epson.json):")
+        lbl_db = ctk.CTkLabel(popup, text="Nome File Database (es: database_epson.json):", font=Stile.FONT_NORMALE, text_color=Stile.TEXT_MUTED)
         lbl_db.pack(pady=2)
-        entry_db = ctk.CTkEntry(popup, width=300)
+        entry_db = ctk.CTkEntry(
+            popup, 
+            width=300, 
+            font=Stile.FONT_NORMALE, 
+            text_color=Stile.TEXT_MAIN, 
+            corner_radius=Stile.CORNER_RADIUS_INPUT
+        )
         entry_db.pack(pady=2)
 
         def conferma_aggiunta():
@@ -177,5 +248,16 @@ class MainView(ctk.CTk):
                 self.controller_riferimento.aggiungi_nuova_categoria(nome, db_file)
                 popup.destroy()
 
-        btn_conferma = ctk.CTkButton(popup, text="Salva e Crea", fg_color="#27ae60", hover_color="#219653", command=conferma_aggiunta)
+        bg_conferma, text_conferma = Stile.ottieni_stile_stato("risolto")
+
+        btn_conferma = ctk.CTkButton(
+            popup, 
+            text="Salva e Crea", 
+            font=Stile.FONT_BADGE,
+            fg_color=bg_conferma, 
+            hover_color=("#198754", "#0f5132"), 
+            text_color=text_conferma,
+            corner_radius=Stile.CORNER_RADIUS_INPUT,
+            command=conferma_aggiunta
+        )
         btn_conferma.pack(pady=15)

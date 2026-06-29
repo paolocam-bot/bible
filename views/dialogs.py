@@ -1,12 +1,15 @@
 import os
-
 import customtkinter as ctk
+from utils.stile import Stile  # <-- Importazione del Design System Centralizzato
 
 class ProblemaDialog(ctk.CTkToplevel):
     def __init__(self, master, titolo_finestra="Gestione Problema", problema_esistente=None):
         super().__init__(master)
         self.title(titolo_finestra)
-        self.geometry("550x600")
+        self.geometry("550x620")
+        
+        # Sfondo della finestra coordinato con il Design System
+        self.configure(fg_color=Stile.BG_CARD)
         
         # Blocca il focus sulla finestra popup finché non viene chiusa
         self.grab_set() 
@@ -27,21 +30,53 @@ class ProblemaDialog(ctk.CTkToplevel):
             print(f"Impossibile caricare il logo nel popup: {e}")
 
         # --- CAMPI DI INPUT ---
-        ctk.CTkLabel(self, text="Titolo Anomalia:", font=ctk.CTkFont(weight="bold")).pack(padx=20, pady=(20, 2), anchor="w")
-        self.ent_titolo = ctk.CTkEntry(self, width=500, height=35)
-        self.ent_titolo.pack(padx=20, pady=5)
+        ctk.CTkLabel(
+            self, text="Titolo Anomalia:", 
+            font=Stile.FONT_BADGE, text_color=Stile.TEXT_MAIN
+        ).pack(padx=25, pady=(20, 2), anchor="w")
+        
+        self.ent_titolo = ctk.CTkEntry(
+            self, width=500, height=35, font=Stile.FONT_NORMALE,
+            text_color=Stile.TEXT_MAIN, placeholder_text_color=Stile.TEXT_MUTED,
+            corner_radius=Stile.CORNER_RADIUS_INPUT
+        )
+        self.ent_titolo.pack(padx=25, pady=5)
 
-        ctk.CTkLabel(self, text="Parole Chiave (separate da virgola):", font=ctk.CTkFont(weight="bold")).pack(padx=20, pady=(15, 2), anchor="w")
-        self.ent_keys = ctk.CTkEntry(self, width=500, height=35, placeholder_text="es. rete, stampante, errore 500")
-        self.ent_keys.pack(padx=20, pady=5)
+        ctk.CTkLabel(
+            self, text="Parole Chiave (separate da virgola):", 
+            font=Stile.FONT_BADGE, text_color=Stile.TEXT_MAIN
+        ).pack(padx=25, pady=(15, 2), anchor="w")
+        
+        self.ent_keys = ctk.CTkEntry(
+            self, width=500, height=35, placeholder_text="es. rete, stampante, errore 500",
+            font=Stile.FONT_NORMALE, text_color=Stile.TEXT_MAIN, 
+            placeholder_text_color=Stile.TEXT_MUTED, corner_radius=Stile.CORNER_RADIUS_INPUT
+        )
+        self.ent_keys.pack(padx=25, pady=5)
 
-        ctk.CTkLabel(self, text="Descrizione Errore:", font=ctk.CTkFont(weight="bold")).pack(padx=20, pady=(15, 2), anchor="w")
-        self.txt_desc = ctk.CTkTextbox(self, width=500, height=80)
-        self.txt_desc.pack(padx=20, pady=5)
+        ctk.CTkLabel(
+            self, text="Descrizione Errore:", 
+            font=Stile.FONT_BADGE, text_color=Stile.TEXT_MAIN
+        ).pack(padx=25, pady=(15, 2), anchor="w")
+        
+        self.txt_desc = ctk.CTkTextbox(
+            self, width=500, height=80, font=Stile.FONT_NORMALE,
+            text_color=Stile.TEXT_MAIN, fg_color=Stile.BG_PRINCIPALE,
+            corner_radius=Stile.CORNER_RADIUS_INPUT
+        )
+        self.txt_desc.pack(padx=25, pady=5)
 
-        ctk.CTkLabel(self, text="Procedure/Soluzioni (una per riga):", font=ctk.CTkFont(weight="bold")).pack(padx=20, pady=(15, 2), anchor="w")
-        self.txt_soluzioni = ctk.CTkTextbox(self, width=500, height=150)
-        self.txt_soluzioni.pack(padx=20, pady=5)
+        ctk.CTkLabel(
+            self, text="Procedure/Soluzioni (una per riga):", 
+            font=Stile.FONT_BADGE, text_color=Stile.TEXT_MAIN
+        ).pack(padx=25, pady=(15, 2), anchor="w")
+        
+        self.txt_soluzioni = ctk.CTkTextbox(
+            self, width=500, height=150, font=Stile.FONT_NORMALE,
+            text_color=Stile.TEXT_MAIN, fg_color=Stile.BG_PRINCIPALE,
+            corner_radius=Stile.CORNER_RADIUS_INPUT
+        )
+        self.txt_soluzioni.pack(padx=25, pady=5)
 
         # Se passiamo un problema esistente (MODIFICA), precompiliamo i campi
         if problema_esistente:
@@ -52,12 +87,24 @@ class ProblemaDialog(ctk.CTkToplevel):
 
         # --- BOTTONI DI CONFERMA ---
         btn_frame = ctk.CTkFrame(self, fg_color="transparent")
-        btn_frame.pack(fill="x", padx=20, pady=25)
+        btn_frame.pack(fill="x", padx=25, pady=20)
         
-        self.btn_salva = ctk.CTkButton(btn_frame, text="Salva", fg_color="green", hover_color="darkgreen", width=120, command=self.conferma)
+        colore_sfondo_save, colore_testo_save = Stile.ottieni_stile_stato("risolto")
+
+        self.btn_salva = ctk.CTkButton(
+            btn_frame, text="Salva", width=120, height=36,
+            font=Stile.FONT_BADGE, fg_color=colore_sfondo_save, text_color=colore_testo_save,
+            hover_color=("#198754", "#0f5132"), corner_radius=Stile.CORNER_RADIUS_INPUT,
+            command=self.conferma
+        )
         self.btn_salva.pack(side="right", padx=5)
         
-        self.btn_annulla = ctk.CTkButton(btn_frame, text="Annulla", fg_color="gray", width=120, command=self.destroy)
+        self.btn_annulla = ctk.CTkButton(
+            btn_frame, text="Annulla", width=120, height=36,
+            font=Stile.FONT_BADGE, fg_color=Stile.BTN_SECONDARY_BG, text_color=Stile.BTN_SECONDARY_TEXT,
+            hover_color=Stile.BTN_SECONDARY_HOVER, corner_radius=Stile.CORNER_RADIUS_INPUT,
+            command=self.destroy
+        )
         self.btn_annulla.pack(side="right", padx=5)
 
     def conferma(self):
@@ -67,9 +114,9 @@ class ProblemaDialog(ctk.CTkToplevel):
         
         # Salviamo il dizionario con i dati inseriti dall'utente
         self.risultato = {
-            "titolo": self.ent_titolo.get(),
+            "titolo": self.ent_titolo.get().strip(),
             "parole_chiave": keys_lista,
-            "descrizione": self.txt_desc.get("1.0", "end-1c"),
+            "descrizione": self.txt_desc.get("1.0", "end-1c").strip(),
             "soluzioni": soluzioni_lista
         }
         self.destroy() # Chiude la finestra salvando il risultato
