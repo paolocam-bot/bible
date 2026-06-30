@@ -1,3 +1,5 @@
+import os
+import json
 from models.dao.negozio_dao import NegozioDAO
 from models.negozio import Negozio
 
@@ -31,6 +33,7 @@ class NegozioModel:
         if not self.negozi:
             self.carica_dati()
         return sorted(self.negozi, key=lambda x: x.nome.lower())
+
     def cerca_negozi(self, query):
         """Cerca corrispondenze sia nel nome del negozio che nel nome del coordinatore."""
         query = query.lower().strip()
@@ -53,24 +56,21 @@ class NegozioModel:
                 "codclifor": n.codclifor,
                 "descrizione_conto": n.descrizione_conto
             }
-            for n in self.negozi
+            # Salviamo mantenendo l'ordine alfabetico corrente
+            for n in sorted(self.negozi, key=lambda x: x.nome.lower())
         ]
         
         try:
-            # Proviamo i vari nomi possibili che potrebbe avere il tuo metodo di scrittura nel DAO
-            if hasattr(self.dao, "salva_tutti_negozi"):
+            # Mappiamo sul tuo metodo reale del DAO visto in precedenza
+            if hasattr(self.dao, "scrivi_tutti_negozi"):
+                self.dao.scrivi_tutti_negozi(dati_da_salvare)
+            elif hasattr(self.dao, "salva_tutti_negozi"):
                 self.dao.salva_tutti_negozi(dati_da_salvare)
-            elif hasattr(self.dao, "scrivi_negozi"):
-                self.dao.scrivi_negozi(dati_da_salvare)
-            elif hasattr(self.dao, "salva_dati"):
-                self.dao.salva_dati(dati_da_salvare)
             else:
-                # Se il DAO non ha un metodo di scrittura, usiamo un salvataggio diretto di emergenza
-                import os, json
                 percorso = getattr(self.dao, "file_path", "data/database_negozi.json")
                 os.makedirs(os.path.dirname(percorso), exist_ok=True)
                 with open(percorso, "w", encoding="utf-8") as f:
-                    json.dump(dati_da_salvare, f, indent=4)
+                    json.dump({"negozi": dati_da_salvare}, f, indent=4, ensure_ascii=False)
                 print("⚠️ Salvataggio eseguito in modalità fallback diretta sul file JSON.")
         except Exception as e:
             print(f"❌ Errore critico durante il salvataggio dei negozi: {e}")
@@ -86,8 +86,11 @@ class NegozioModel:
         for n in self.negozi:
             if n.codice_breve == codice_breve_target:
                 n.nome = nuovo_nome
-                n.coordinatore = nuevo_coordinatore
+                n.coordinatore = nuovo_coordinatore  # 🛠️ CORRETTO QUI: era nuevo_coordinatore
                 n.codclifor = nuovo_codclifor
                 n.descrizione_conto = nuova_descrizione
                 break
-        self._salva_su_file()  # <-- Corretto il refuso (era _save_su_file)
+        
+        # Riordina immediatamente la lista locale per riflettere i cambi di nome in tabella
+        self.negozi = sorted(self.negozi, key=lambda x: x.nome.lower())
+        self._salva_su_file()

@@ -37,13 +37,20 @@ class NegozioController:
 
     def modifica_negozio_esistente(self, codice_breve_target, nuovo_nome, nuovo_coordinatore, nuovo_codclifor, nuova_descrizione):
         """Richiamato quando l'utente salva le modifiche di una scheda negozio."""
-        # 1. Applica le modifiche nel database tramite Modello
-        self.model.modifica_negozio(codice_breve_target, nuovo_nome, nuovo_coordinatore, nuovo_codclifor, nuova_descrizione)
         
-        # 2. Aggiorna la grafica
+        # 1. Applica le modifiche nel file JSON tramite il DAO
+        self.model.modifica_negozio(
+            codice_breve_target=codice_breve_target, 
+            nuovo_nome=nuovo_nome, 
+            nuovo_coordinatore=nuovo_coordinatore, 
+            nuovo_codclifor=nuovo_codclifor, 
+            nuova_descrizione=nuova_descrizione
+        )
+        
+        # 2. Aggiorna la grafica della tabella dei negozi
         self.esegui_ricerca()
         
-        # 3. Notifica le modifiche al modulo Task
+        # 3. Notifica le modifiche al modulo Task per aggiornare i menu a tendina dei negozi
         self._notifica_aggiornamento_tasks()
 
     def elimina_negozio_esistente(self, codice_breve_target):

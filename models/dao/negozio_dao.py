@@ -47,3 +47,28 @@ class NegozioDAO:
 
         with open(self.file_path, "w", encoding="utf-8") as file:
             json.dump(output, file, indent=4, ensure_ascii=False)
+        
+    def modifica_negozio(self, codice_breve_target, nuovo_nome, nuovo_coordinatore, nuovo_codclifor, nuova_descrizione):
+        """Cerca il negozio tramite il codice originale e ne aggiorna i campi."""
+        # 1. Carica la lista attuale dei negozi (oggetti Negozio)
+        negozi = self.leggi_tutti_negozi()
+        trovato = False
+
+        # 2. Cerca il record corrispondente usando la dot notation (oggetti)
+        for n in negozi:
+            if n.codice_breve == codice_breve_target:
+                # Aggiorna gli attributi dell'oggetto
+                n.nome = nuovo_nome
+                n.coordinatore = nuovo_coordinatore  # <-- Corretto (o al posto della e)
+                n.codclifor = nuovo_codclifor
+                n.descrizione_conto = nuova_descrizione
+                trovato = True
+                break  # Record trovato e aggiornato, usciamo dal ciclo
+
+        # 3. Se l'ha trovato, sovrascrive il file JSON con la lista aggiornata
+        if trovato:
+            self.scrivi_tutti_negozi(negozi)
+            return True
+        
+        print(f"Negozio con codice {codice_breve_target} non trovato.")
+        return False

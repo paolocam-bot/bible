@@ -46,7 +46,7 @@ class Stile:
         if "risolto" in stato_str or "completato" in stato_str:
             return ("#d1e7dd", "#064e3b"), ("#0f5132", "#34d399")
         elif "da finire" in stato_str or "in attesa" in stato_str:
-            return ("#ffe5d0", "#7c2d12"), ("#a04000", "#fb923c")
+            return ("#84e4ac", "#5aff19"), ("#4bb3f8", "#01548b")
         elif "eliminato" in stato_str or "pericolo" in stato_str:
             return ("#f8d7da", "#7f1d1d"), ("#842029", "#fca5a5")
         else:
