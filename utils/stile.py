@@ -27,8 +27,8 @@ class Stile:
     # 3. STILE DEI PULSANTI (ELEMENTI ATTIVI)
     # ==========================================
     # Pulsante Primario (Es. Inserisci, Salva, Conferma)
-    BTN_PRIMARY_BG = ("#3b82f6", "#2563eb")
-    BTN_PRIMARY_HOVER = ("#2563eb", "#1d4ed8")
+    BTN_PRIMARY_BG = ("#9bbbee", "#6e98f3")
+    BTN_PRIMARY_HOVER = ("#4d83f7", "#5b85fa")
     BTN_PRIMARY_TEXT = ("#ffffff", "#ffffff")
 
     # Pulsante Secondario / Annulla
