@@ -261,9 +261,8 @@ class TaskView(ctk.CTkFrame):
         tasks = self.controller.ottieni_tutte_task()
         
         # Estrazione degli stati di colore per la colonna dinamica dello stato
-        _, txt_color_ris = Stile.ottieni_stile_stato("risolto")
-        _, txt_color_lav = Stile.ottieni_stile_stato("lavorazione")
-        _, txt_color_err = Stile.ottieni_stile_stato("eliminato")
+        _, txt_color_ris = Stile.ottieni_stile_stato("risolto")      # Verde
+        _, txt_color_err = Stile.ottieni_stile_stato("eliminato")    # Rosso
 
         i = 0
         for task in reversed(tasks):
@@ -281,17 +280,23 @@ class TaskView(ctk.CTkFrame):
             riga.pack_propagate(False)
             riga.grid_columnconfigure(4, weight=1) 
 
-            # Colore condizionale semantico per l'etichetta dello stato
-            if task["stato"] == "Risolto":
+            # 🎨 LOGICA CONDIZIONALE SEMANTICA E ROBUSTA CON .lower()
+            stato_lower = task.get("stato", "").lower()
+            
+            if "risolto" in stato_lower:
                 colore_stato = txt_color_ris
-            elif "Da finire" in task["stato"]:
-                colore_stato = txt_color_lav
+            elif "finire" in stato_lower or "incompleto" in stato_lower:
+                # Giallo/Oro stabile sia per Light che per Dark Mode
+                colore_stato = ("#d4ac0d", "#f1c40f") 
             else:
+                # Default o altri stati dinamici
                 colore_stato = txt_color_err
 
             ctk.CTkLabel(riga, text=task["data"], width=85, anchor="w", font=Stile.FONT_NORMALE, text_color=Stile.TEXT_MAIN).grid(row=0, column=0, padx=12, sticky="w")
             ctk.CTkLabel(riga, text=task.get("negozio", "N/D"), width=130, anchor="w", font=Stile.FONT_SUBTITLE, text_color=Stile.TEXT_MAIN).grid(row=0, column=1, padx=12, sticky="w")
             ctk.CTkLabel(riga, text=task["operatore"], width=100, anchor="w", font=Stile.FONT_NORMALE, text_color=Stile.TEXT_MAIN).grid(row=0, column=2, padx=12, sticky="w")
+            
+            # Label dello stato con il colore dinamico corretto
             ctk.CTkLabel(riga, text=task["stato"], text_color=colore_stato, width=130, anchor="w", font=ctk.CTkFont(size=12, weight="bold")).grid(row=0, column=3, padx=12, sticky="w")
             
             lbl_nota_testo = task["note"].replace("\n", " ")

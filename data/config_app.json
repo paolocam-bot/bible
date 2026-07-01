@@ -28,5 +28,11 @@
         "testo": "🏬 Anagrafica Negozi",
         "db": "database_negozi.json",
         "tipo": "negozio"
+    },
+    {
+        "id": "test",
+        "testo": "📋 test",
+        "db": "test.json",
+        "tipo": "manuale"
     }
 ]

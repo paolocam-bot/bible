@@ -20,7 +20,7 @@ from views.task_view import TaskView
 # IMPORT DEI CONTROLLER NECESSARI
 from controllers.negozio_controller import NegozioController
 from controllers.base_knowledge_controller import BaseKnowledgeController
-from controllers.task_controller import TaskController # <-- AGGIUNTO
+from controllers.task_controller import TaskController
 
 class MainController:
     def __init__(self, view):
@@ -55,8 +55,8 @@ class MainController:
         # Modulo Registro Task (Refactored con il suo Controller dedicato)
         self.model_task = TaskModel(self.view.cartella_progetto)
         self.view_task = TaskView(self.view.container_area)
-        self.ctrl_task = TaskController(self.model_task, self.view_task, self) # <-- AGGIUNTO
-        self.view_task.imposta_controller(self.ctrl_task)                     # <-- MODIFICATO
+        self.ctrl_task = TaskController(self.model_task, self.view_task, self)
+        self.view_task.imposta_controller(self.ctrl_task)
 
         # =====================================================================
         # 3. COLLEGAMENTO COMANDI E NAVIGAZIONE
@@ -102,7 +102,9 @@ class MainController:
             titolo_popup = config_sezione["testo"].replace("📋 ", "").strip() if config_sezione else "Manuale Custom"
             
             BaseKnowledgeController(nuovo_modello, nuova_vista, titolo_popup)
-            self.view.mostra_sezione(nueva_vista)
+            
+            # 🛠️ RISOLTO: Sistemato il typo da nueva_vista a nuova_vista
+            self.view.mostra_sezione(nuova_vista)
 
     def ottieni_nomi_negozi(self):
         """Mantenuto qui perché serve al TaskController per popolare la ComboBox dei negozi."""
@@ -140,6 +142,9 @@ class MainController:
         self.view.salva_configurazione()
         self.view.aggiorna_sidebar_grafica()
         self.collega_bottoni_dinamici()
+        
+        # 🚀 AUTO-APERTURA ISTANTANEA: Apre la nuova sezione appena viene creata
+        self.apri_sezione_dinamica(nome_file_json, "manuale")
 
     def rimuovi_categoria(self, id_categoria):
         self.view.configurazione_sezioni = [s for s in self.view.configurazione_sezioni if s["id"] != id_categoria]
